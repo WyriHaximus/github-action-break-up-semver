@@ -1,0 +1,29 @@
+name: 'Break up SemVer'
+description: ''
+branding:
+  icon: 'tag'
+  color: 'gray-dark'
+inputs:
+  version:
+    description: 'version'
+    required: true
+outputs:
+  major:
+    description: 'MAJOR'
+  v_major:
+    description: 'vMAJOR'
+  minor:
+    description: 'MINOR'
+  patch:
+    description: 'PATCH'
+  major_minor:
+    description: 'MAJOR_MINOR'
+  v_major_minor:
+    description: 'vMAJOR_MINOR'
+  major_minor_patch:
+    description: 'MAJOR_MINOR_PATCH'
+  v_major_minor_patch:
+    description: 'vMAJOR_MINOR_PATCH'
+runs:
+  using: 'node12'
+  main: 'main.js'

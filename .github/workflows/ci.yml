@@ -1,0 +1,29 @@
+name: Continuous Integration
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+jobs:
+  get-previous-tag:
+    name: Test Get Previous Tag on ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: 'Break up semvers'
+        id: breakonupsemvers
+        uses: ./
+        with:
+          version: v123.243.423
+      - run: |
+          echo "MAJOR: ${{ steps.breakonupsemvers.outputs.major }}"
+          echo "MINOR: ${{ steps.breakonupsemvers.outputs.minor }}"
+          echo "PATCH: ${{ steps.breakonupsemvers.outputs.patch }}"
+          echo "MAJOR_MINOR: ${{ steps.breakonupsemvers.outputs.major_minor }}"
+          echo "MAJOR_MINOR_PATCH: ${{ steps.breakonupsemvers.outputs.major_minor_patch }}"

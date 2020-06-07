@@ -1,0 +1,9 @@
+const version = require('semver/functions/parse')(process.env.INPUT_VERSION);
+console.log(`::set-output name=major::${version.major}`);
+console.log(`::set-output name=v_major::v${version.major}`);
+console.log(`::set-output name=minor::${version.minor}`);
+console.log(`::set-output name=patch::${version.patch}`);
+console.log(`::set-output name=major_minor::${version.major}.${version.minor}`);
+console.log(`::set-output name=v_major_minor::v${version.major}.${version.minor}`);
+console.log(`::set-output name=major_minor_patch::${version.major}.${version.minor}.${version.patch}`);
+console.log(`::set-output name=v_major_minor_patch::v${version.major}.${version.minor}.${version.patch}`);
