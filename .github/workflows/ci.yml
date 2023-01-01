@@ -9,21 +9,86 @@ jobs:
     name: Test Get Previous Tag on ${{ matrix.os }}
     strategy:
       matrix:
+        prefix:
+          - ""
+          - v
+        major:
+          - 1
+          - 12
+        minor:
+          - 1
+          - 12
+          - 123
+          - 1234
+        patch:
+          - 1
+          - 12
+          - 123
+          - 1234
+          - 1345
         os:
           - ubuntu-latest
           - windows-latest
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: 'Break up semvers'
         id: breakonupsemvers
         uses: ./
         with:
-          version: v123.243.423
+          version: ${{ matrix.prefix }}${{ matrix.major }}.${{ matrix.minor }}.${{ matrix.patch }}
       - run: |
           echo "MAJOR: ${{ steps.breakonupsemvers.outputs.major }}"
           echo "MINOR: ${{ steps.breakonupsemvers.outputs.minor }}"
           echo "PATCH: ${{ steps.breakonupsemvers.outputs.patch }}"
           echo "MAJOR_MINOR: ${{ steps.breakonupsemvers.outputs.major_minor }}"
           echo "MAJOR_MINOR_PATCH: ${{ steps.breakonupsemvers.outputs.major_minor_patch }}"
+      - name: Assert Major
+        uses: therussiankid92/gat@v1
+        with:
+          assertion: should.equal
+          expected: ${{ matrix.major }}
+          actual: ${{ steps.breakonupsemvers.outputs.major }}
+      - name: Assert vMajor
+        uses: therussiankid92/gat@v1
+        with:
+          assertion: should.equal
+          expected: v${{ matrix.major }}
+          actual: ${{ steps.breakonupsemvers.outputs.v_major }}
+      - name: Assert Minor
+        uses: therussiankid92/gat@v1
+        with:
+          assertion: should.equal
+          expected: ${{ matrix.minor }}
+          actual: ${{ steps.breakonupsemvers.outputs.minor }}
+      - name: Assert Patch
+        uses: therussiankid92/gat@v1
+        with:
+          assertion: should.equal
+          expected: ${{ matrix.patch }}
+          actual: ${{ steps.breakonupsemvers.outputs.patch }}
+      - name: Assert Major.Minor
+        uses: therussiankid92/gat@v1
+        with:
+          assertion: should.equal
+          expected: ${{ matrix.major }}.${{ matrix.minor }}
+          actual: ${{ steps.breakonupsemvers.outputs.major_minor }}
+      - name: Assert vMajor.Minor
+        uses: therussiankid92/gat@v1
+        with:
+          assertion: should.equal
+          expected: v${{ matrix.major }}.${{ matrix.minor }}
+          actual: ${{ steps.breakonupsemvers.outputs.v_major_minor }}
+      - name: Assert Major.Minor.Patch
+        uses: therussiankid92/gat@v1
+        with:
+          assertion: should.equal
+          expected: ${{ matrix.major }}.${{ matrix.minor }}.${{ matrix.patch }}
+          actual: ${{ steps.breakonupsemvers.outputs.major_minor_patch }}
+      - name: Assert vMajor.Minor.Patch
+        uses: therussiankid92/gat@v1
+        with:
+          assertion: should.equal
+          expected: v${{ matrix.major }}.${{ matrix.minor }}.${{ matrix.patch }}
+          actual: ${{ steps.breakonupsemvers.outputs.v_major_minor_patch }}
