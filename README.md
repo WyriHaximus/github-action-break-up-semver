@@ -28,48 +28,53 @@ This action outputs the following outputs:
 
 ## Example
 
-This example will get the supported PHP version from `composer.json` and run tests of all those version:
+This example is a slimmed down version how I'm using this action 
 
 ```yaml
-name: CI
-
+name: Create Release
+env:
+  MILESTONE: ${{ github.event.milestone.title }}
 on:
-  push:
-  pull_request:
-
+  milestone:
+    types:
+      - closed
 jobs:
-  supported-versions-matrix:
-    name: Supported Versions Matrix
+  generate-version-strategy:
+    name: Generate Version Strategy
+    needs:
+      - wait-for-status-checks
     runs-on: ubuntu-latest
     outputs:
-      extensions: ${{ steps.supported-versions-matrix.outputs.extensions }}
-      version: ${{ steps.supported-versions-matrix.outputs.version }}
+      docker_versions: ${{ steps.generate-version-strategy.outputs.docker_versions }}
+      tag_versions: ${{ steps.generate-version-strategy.outputs.tag_versions }}
+    steps:
+      - uses: actions/checkout@v1
+      - uses: WyriHaximus/github-action-break-up-semver@master
+        id: breakupsemver
+        with:
+          version: ${{ env.MILESTONE }}
+      - id: generate-version-strategy
+        name: Generate Versions
+        env:
+          MAJOR: ${{ steps.breakupsemver.outputs.v_major }}
+          MAJOR_MINOR: ${{ steps.breakupsemver.outputs.v_major_minor }}
+          MAJOR_MINOR_PATCH: ${{ steps.breakupsemver.outputs.v_major_minor_patch }}
+        run: |
+          echo "::set-output name=docker_versions::[\"${MAJOR}\",\"${MAJOR_MINOR}\",\"${MAJOR_MINOR_PATCH}\"]"
+  tag-docker-image:
+    name: Tag Docker image for version ${{ matrix.version }}
+    needs:
+      - generate-version-strategy
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJson(needs.generate-version-strategy.outputs.docker_versions) }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - id: supported-versions-matrix
-        uses: WyriHaximus/github-action-composer-php-versions-in-range@v1
-  tests:
-    name: PHP ${{ matrix.php }} Latest
-    runs-on: ubuntu-latest
-    needs:
-      - supported-versions-matrix
-    strategy:
-      matrix:
-        php: ${{ fromJson(needs.supported-versions-matrix.outputs.version) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          tools: composer
-          coverage: none
-          extensions: ${{ join(fromJson(needs.supported-versions-matrix.outputs.extensions), ',') }}
-      - name: Install dependencies
-        uses: ramsey/composer-install@v2
-      - name: Execute tests
-        run: composer test
+      - run: |
+          printf "FROM %s" $(echo "ghcr.io/${GITHUB_REPOSITORY}:sha-${GITHUB_SHA}" | tr '[:upper:]' '[:lower:]') >> Dockerfile.tag
+          docker build --no-cache -f Dockerfile.tag -t $(echo "ghcr.io/${GITHUB_REPOSITORY}:${{ matrix.version }}" | tr '[:upper:]' '[:lower:]') .
 ```
 
 ## License ##
