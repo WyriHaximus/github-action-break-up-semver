@@ -25,5 +25,5 @@ outputs:
   v_major_minor_patch:
     description: 'vMAJOR_MINOR_PATCH'
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'main.js'
